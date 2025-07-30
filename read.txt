@@ -1,0 +1,27 @@
+1. sudo apt update && sudo apt install python3-pip suricata
+pip3 install flask requests
+
+2. sudo mkdir -p /var/lib/suricata/rules
+sudo tee /var/lib/suricata/rules/local.rules << 'EOF'
+drop tcp any any -> any 8080 (msg:"SQLi attempt detected"; flow:established,to_server; content:"' OR '1'='1"; nocase; sid:1000001; rev:1;)
+EOF
+
+3. Configure suricata.yaml (/etc/suricata/suricata.yaml)
+
+default-rule-path: /var/lib/suricata/rules
+rule-files:
+  - local.rules
+  
+4. sudo chown root:root /var/lib/suricata/rules/local.rules
+sudo chmod 644 /var/lib/suricata/rules/local.rules
+
+5. curl -v "http://localhost:8080/search?q=' OR '1'='1"
+
+6. python3 app.py 
+
+7. sudo suricata -c /etc/suricata/suricata.yaml -i eth0 --af-packet
+
+8. curl -v "http://localhost:8080/search?q=' OR '1'='1"
+
+9. python3 bypass.py
+
